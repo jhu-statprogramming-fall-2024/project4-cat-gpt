@@ -1,0 +1,26 @@
+---
+title: "States names table"
+author: "Meishu Zhao"
+date: "2024-11-27"
+format: html
+---
+
+```{r}
+library(rvest)
+library(tidyverse)
+library(polite)
+library(stringr)
+```
+```{r}
+url <- "https://www.scouting.org/resources/los/states/"
+session <- bow(url)
+webpage <- scrape(session)
+
+data_table <- webpage %>%
+    html_nodes("table") %>%
+    html_table(fill = TRUE)
+
+
+head(data_table)
+write.csv(data_table, "data_scraping/states_weather.csv", row.names = FALSE)
+```

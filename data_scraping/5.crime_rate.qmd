@@ -1,0 +1,33 @@
+---
+title: "Crime Rate Data Scraping"
+author: "Meishu Zhao"
+date: "2024-11-27"
+format: html
+---
+```{r}
+library(rvest)
+library(dplyr)
+library(purrr)
+```
+
+```{r}
+webpage <- read_html("https://en.wikipedia.org/wiki/List_of_U.S._states_and_territories_by_violent_crime_rate")
+
+# Extract all tables(there are two tables)
+wikitables <- webpage %>%
+    html_elements(".wikitable") %>%
+    html_table(fill = TRUE) %>%
+    purrr::map(as.data.frame)
+
+for (i in seq_along(wikitables)) {
+    cat(paste("Table", i, ":\n"))
+    print(head(wikitables[[i]]))
+    cat("\n")
+}
+
+# we only want table 2
+crime_table <- wikitables[[2]]
+colnames(crime_table) <- c("State", "crime_2018", "crime_2019", "crime_2020", "crime_2021", "crime_2022")
+head(crime_table)
+write.csv(crime_table, "data_scraping/states_crime.csv", row.names = FALSE)
+```

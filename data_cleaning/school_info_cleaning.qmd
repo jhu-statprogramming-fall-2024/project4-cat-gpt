@@ -1,0 +1,128 @@
+---
+title: "School Info Cleaning"
+author: "Meishu Zhao"
+date: "2024-11-27"
+format: html
+---
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidyr)
+library(stringr)
+library(dplyr)
+```
+
+## Load the data
+```{r}
+data=read.csv("../data_scraping/top_100_colleges_cleaned.csv")
+```
+
+## Clean School.Name vairable
+```{r}
+#add comma between school names and city names
+data <- data %>%
+  mutate(School.Name = str_replace_all(School.Name, "([a-z])([A-Z])", "\\1, \\2")) %>%
+  separate(School.Name, into = c("School", "City", "State_Postal"), sep = ", ", extra = "merge")
+
+# Remove the last row which contains the average
+data <- data[-nrow(data), ]
+
+# View the cleaned School.Name
+head(data)
+```
+
+## Clean the SAT.ACT.Scores variable
+```{r}
+data <- data %>%
+     mutate(SAT.ACT.Scores = str_replace_all(SAT.ACT.Scores, ",", "")) %>%
+    mutate(SAT.ACT.Scores = str_replace_all(SAT.ACT.Scores, "([T])([0-9])", "\\1, \\2")) %>%
+    separate(SAT.ACT.Scores, into = c("SAT", "ACT"), sep = ", ", extra = "merge") %>%
+    mutate(SAT = str_replace_all(SAT, "[^0-9]", "")) %>%
+    mutate(ACT = str_replace_all(ACT, "[^0-9]", "")) %>%
+    mutate(SAT = ifelse(SAT == "", NA, SAT)) %>%
+    mutate(ACT = ifelse(ACT == "", NA, ACT))
+```
+
+## Clean the Tuition and Student Population variables
+```{r}
+clean_numeric <- function(column) {
+    column %>%
+        str_replace_all("\\$", "") %>%  # Remove dollar signs
+        str_replace_all(",", "") %>% 
+        # Remove commas
+        str_replace("\\(.*?\\)", "") %>% # Remove in-state tuition
+        str_trim() %>%
+        as.numeric()
+}
+
+data <- data %>%
+  mutate(across(c(Undergraduate.Tuition, Graduate.Tuition, Student.Population), clean_numeric))
+```
+
+## Cleaned percentages
+```{r}
+clean_percentage <- function(column) {
+    column %>%
+        str_replace_all("%", "") %>%  # Remove %
+        as.numeric() %>%
+        `/`(100) %>%
+        as.numeric()
+}
+
+data <- data %>%
+  mutate(across(c(Acceptance.Rate,Graduation.Rate), clean_percentage))
+
+```
+
+## Merge with States names table
+```{r}
+states <- read.csv("../data_scraping/states_name.csv")
+data <- data %>%
+    mutate(State_Postal = str_trim(State_Postal))
+states <- states %>%
+    mutate(Postal = str_trim(Postal))
+data <- data %>%
+  left_join(states, by = c("State_Postal" = "Postal"))
+```
+
+## Merge with Weather data
+```{r}
+weather <- read.csv("../data_scraping/states_weather.csv")
+data <- data %>%
+  left_join(weather, by = c("State" = "State"))
+```
+
+## Merge with Crime Rate data
+```{r}
+crime <- read.csv("../data_scraping/states_crime.csv")
+data <- data %>%
+  left_join(crime, by = c("State" = "State"))
+```
+
+## Merge with US News Ranking data
+```{r}
+US_News <- read.csv("../data_scraping/US_News_ranking_24_25_cleaned.csv")
+data <- data %>%
+  inner_join(US_News, by = c("School" = "Institution_full_name"))
+```
+
+```{r}
+data <- data %>%
+  relocate(Institution, .after = School)%>%
+  rename(Tuition_rank = Rank) %>%
+  rename(US_News_rank_2025 = Rank..2025.) %>%
+  rename(US_News_rank_2024 = Rank..2024.) %>%
+  relocate(Tuition_rank, .after = Graduate.Tuition)%>%
+  relocate(US_News_rank_2025, .before = School)%>%
+  relocate(US_News_rank_2024, .after = US_News_rank_2025) %>%
+  relocate(Change_in_rank = Change, .after = US_News_rank_2024) %>%
+  relocate(State, .after = State_Postal)
+```
+
+```{r}
+head(data)
+```
+
+## Save the cleaned data
+```{r}
+write.csv(data, "../data_cleaning/full_school_info_cleaned.csv", row.names = FALSE)
+```

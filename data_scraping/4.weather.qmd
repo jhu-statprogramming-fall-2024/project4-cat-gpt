@@ -1,0 +1,26 @@
+---
+title: "Weather Data Scraping"
+author: "Meishu Zhao"
+date: "2024-11-27"
+format: html
+---
+
+```{r}
+library(rvest)
+library(dplyr)
+library(polite)
+```
+```{r}
+url <- "https://www.currentresults.com/Weather/US/average-annual-state-temperatures.php"
+session <- bow(url)
+webpage <- scrape(session)
+
+tables <- webpage %>%
+  html_elements("table.articletable.tablecol-1-left") %>%
+  html_table(fill = TRUE)
+
+data_table <- bind_rows(tables)
+data_table <- data_table %>%
+    rename(weather_rank_h_l= Rank)
+write.csv(data_table, "data_scraping/states_weather.csv", row.names = FALSE)
+```

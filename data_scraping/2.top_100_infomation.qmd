@@ -1,0 +1,28 @@
+---
+title: "Top 100 Information"
+author: "Meishu Zhao"
+date: "2024-11-27"
+format: html
+---
+
+```{r}
+library(rvest)
+library(tidyverse)
+library(polite)
+library(xml2)
+library(stringr)
+```
+```{r}
+url <- "https://www.collegetuitioncompare.com/best-schools/us-top-100/"
+session <- bow(url)
+webpage <- scrape(session)
+
+data_table <- webpage %>%
+    html_nodes("#comparison-table") %>%
+    html_table(fill = TRUE)
+
+
+head(data_table)
+
+write.csv(data_table, "top_100_colleges.csv", row.names = FALSE)
+```

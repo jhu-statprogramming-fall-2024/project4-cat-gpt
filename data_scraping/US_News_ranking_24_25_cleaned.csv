@@ -1,0 +1,51 @@
+Institution,Institution_full_name,Rank (2025),Rank (2024),Change,Reddit_subdirectory
+Princeton,Princeton University,1,1,0,princeton
+MIT,Massachusetts Institute of Technology,2,2,0,mit
+Harvard,Harvard University,3,3,0,harvard
+Stanford,Stanford University,4,3,1,stanford
+Yale,Yale University,5,5,0,yale
+Caltech,California Institute of Technology,6,7,-1,caltech
+Duke,Duke University,6,7,-1,duke
+Johns Hopkins,Johns Hopkins University,6,9,-3,jhu
+Northwestern,Northwestern University,6,9,-3,northwestern
+University of Pennsylvania,University of Pennsylvania,10,6,4,upenn
+Cornell,Cornell University,11,12,-1,cornell
+University of Chicago,University of Chicago,11,12,-1,uchicago
+Brown,Brown University,13,9,4,brownu
+Columbia,Columbia University in the City of New York,13,12,1,columbia
+Dartmouth,Dartmouth College,15,18,-3,dartmouth
+UCLA,University of California-Los Angeles,15,15,0,ucla
+UC Berkeley,University of California-Berkeley,17,15,2,berkeley
+Notre Dame,University of Notre Dame,18,20,-2,notredame
+Rice,Rice University,18,17,1,riceuniversity
+Vanderbilt,Vanderbilt University,18,18,0,vanderbilt
+Carnegie Mellon,Carnegie Mellon University,21,24,-3,cmu
+University of Michigan,University of Michigan-Ann Arbor,21,21,0,uofm
+Washington University in St. Louis,Washington University in St Louis,21,24,-3,washu
+Emory,Emory University,24,24,0,emory
+Georgetown,Georgetown University,24,22,2,georgetown
+University of Virginia,University of Virginia-Main Campus,24,24,0,uva
+UNC Chapel Hill,University of North Carolina at Chapel Hill,27,22,5,unc
+USC,University of Southern California,27,28,-1,usc
+UC San Diego,University of California-San Diego,29,27,2,ucsd
+NYU,New York University,30,35,-5,nyu
+University of Florida,University of Florida,30,28,2,ufl
+UT Austin,The University of Texas at Austin,30,32,-2,utaustin
+Georgia Tech,Georgia Institute of Technology-Main Campus,33,33,0,gatech
+UC Davis,University of California-Davis,33,28,5,ucdavis
+UC Irvine,University of California-Irvine,33,33,0,uci
+University of Illinois - Urbana Champaign,University of Illinois Urbana-Champaign,33,35,-2,uiuc
+Boston College,Boston College,37,39,-2,bostoncollege
+Tufts,Tufts University,37,40,-3,tufts
+UC Santa Barbara,University of California-Santa Barbara,39,35,4,ucsantabarbara
+University of Wisconsin - Madison,University of Wisconsin-Madison,39,35,4,uwmadison
+Boston University,Boston University,41,43,-2,bostonu
+Ohio State,Ohio State University-Main Campus,41,43,-2,osu
+Rutgers University - New Brunswick,Rutgers University-New Brunswick,41,40,1,rutgers
+University of Maryland - College Park,University of Maryland-College Park,44,46,-2,umd
+University of Rochester,University of Rochester,44,47,-3,urochester
+Lehigh,Lehigh University,46,47,-1,lehigh
+Purdue,Purdue University-Main Campus,46,43,3,purdue
+University of Georgia,University of Georgia,46,47,-1,uga
+University of Washington,University of Washington-Seattle Campus,46,40,6,udub
+Wake Forest,Wake Forest University,46,47,-1,wfu

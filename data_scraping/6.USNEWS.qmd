@@ -1,0 +1,25 @@
+---
+title: "US News"
+format: html
+---
+```{r}
+library(rvest)
+library(dplyr)
+```
+```{r}
+url <- "https://www.collegekickstart.com/blog/item/u-s-news-world-report-posts-2025-college-rankings"
+
+top50_college <- read_html(url)|> 
+    html_element("table")|> 
+    html_table() 
+
+top50_college <- as.data.frame(top50_college) |>
+  mutate(Change = `Rank (2025)` - `Rank (2024)`)
+
+reddit_dir <- read.csv("data_scraping/Reddit_Dictionary.csv")
+
+top50_college <- bind_cols (top50_college, reddit_dir %>% select(Reddit_subdirectory = `Reddit_subdirectory`))|>
+  mutate(Reddit_subdirectory = tolower(Reddit_subdirectory))
+head(top50_college)
+write.csv(top50_college, "data_scraping/US_News_ranking_24_25.csv", row.names = FALSE)
+```

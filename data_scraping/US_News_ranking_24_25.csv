@@ -1,0 +1,51 @@
+Institution,Rank (2025),Rank (2024),Change,Reddit_subdirectory
+Princeton,1,1,0,princeton
+MIT,2,2,0,mit
+Harvard,3,3,0,harvard
+Stanford,4,3,1,stanford
+Yale,5,5,0,yale
+Caltech,6,7,-1,caltech
+Duke,6,7,-1,duke
+Johns Hopkins,6,9,-3,jhu
+Northwestern,6,9,-3,northwestern
+University of Pennsylvania,10,6,4,upenn
+Cornell,11,12,-1,cornell
+University of Chicago,11,12,-1,uchicago
+Brown,13,9,4,brownu
+Columbia,13,12,1,columbia
+Dartmouth,15,18,-3,dartmouth
+UCLA,15,15,0,ucla
+UC Berkeley,17,15,2,berkeley
+Notre Dame,18,20,-2,notredame
+Rice,18,17,1,riceuniversity
+Vanderbilt,18,18,0,vanderbilt
+Carnegie Mellon,21,24,-3,cmu
+University of Michigan,21,21,0,uofm
+Washington University in St. Louis,21,24,-3,washu
+Emory,24,24,0,emory
+Georgetown,24,22,2,georgetown
+University of Virginia,24,24,0,uva
+UNC Chapel Hill,27,22,5,unc
+USC,27,28,-1,usc
+UC San Diego,29,27,2,ucsd
+NYU,30,35,-5,nyu
+University of Florida,30,28,2,ufl
+UT Austin,30,32,-2,utaustin
+Georgia Tech,33,33,0,gatech
+UC Davis,33,28,5,ucdavis
+UC Irvine,33,33,0,uci
+University of Illinois - Urbana Champaign,33,35,-2,uiuc
+Boston College,37,39,-2,bostoncollege
+Tufts,37,40,-3,tufts
+UC Santa Barbara,39,35,4,ucsantabarbara
+University of Wisconsin - Madison,39,35,4,uwmadison
+Boston University,41,43,-2,bostonu
+Ohio State,41,43,-2,osu
+Rutgers University - New Brunswick,41,40,1,rutgers
+University of Maryland - College Park,44,46,-2,umd
+University of Rochester,44,47,-3,urochester
+Lehigh,46,47,-1,lehigh
+Purdue,46,43,3,purdue
+University of Georgia,46,47,-1,uga
+University of Washington,46,40,6,udub
+Wake Forest,46,47,-1,wfu
