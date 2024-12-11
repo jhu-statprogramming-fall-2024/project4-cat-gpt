@@ -1,0 +1,88 @@
+---
+title: "US News Ranking"
+format: html
+editor: visual
+---
+
+```{r, messsage=FALSE, warning=FALSE}
+library(rvest)
+library(dplyr)
+library(RSelenium)
+library(stringr)
+library(tools)
+library(purrr)
+library(tidyverse)
+library(lubridate)
+library(tidytext)
+library(wordcloud)
+
+library(shiny)
+library(shinydashboard)
+```
+
+## Scrape data from HTML to get US News Top 50 US Universities
+
+```{r}
+url <- "https://www.collegekickstart.com/blog/item/u-s-news-world-report-posts-2025-college-rankings"
+
+top50_college <- read_html(url)|> 
+    html_element("table")|> 
+    html_table() 
+
+top50_college <- as.data.frame(top50_college) |>
+  mutate(Change = `Rank (2025)` - `Rank (2024)`)
+
+reddit_dir <- read.csv("Reddit_Dictionary.csv")
+
+top50_college <- bind_cols (top50_college, reddit_dir %>% select(Reddit_subdirectory = `Reddit_subdirectory`))|>
+  mutate(Reddit_subdirectory = tolower(Reddit_subdirectory))
+```
+
+## Data Cleaning & Wrangling: prepare data for Shiny Dashboard
+
+```{r, message=FALSE}
+csv_files <- list.files(path = "university_posts", pattern = "*.csv", full.names = TRUE)
+
+reddit_preprocess <- function(path){
+  # read in each csv file by using the path
+  data <- read.csv(path) 
+  
+  # add school name as a column to each csv file
+  data <- data %>% 
+    mutate(school = file_path_sans_ext(basename(path)))
+  
+  ## separate created_date into year, month, day
+  data <- data %>% 
+    mutate(created_date = as.Date(created_date),
+           year = year(created_date),
+           month = month(created_date),
+           day = day(created_date))
+  
+  return(data)
+}
+
+
+# Read each csv reddit file for each school and combine them into 1 big file using map()
+reddit_all <- map(csv_files, reddit_preprocess) %>%     
+  bind_rows() %>% 
+  select(-c(url, score, num_comments)) %>%
+  mutate(selftext = paste(title, selftext, sep = " "))
+
+reddit_all <- left_join(reddit_all, top50_college, by = c("school" = "Reddit_subdirectory"))
+sentiment_afinn <- read.csv("sentiment_afinn.csv") 
+words_to_exclude <- c("university", "student","school", "i\'m", "students") # exclude the following words when doing text analysis
+
+sentiment_score <- reddit_all %>% 
+  unnest_tokens(word, selftext) %>%
+  anti_join(stop_words) %>%
+  filter(!(word %in% words_to_exclude)) %>%
+  group_by(title)%>%
+  count(word) %>%
+  inner_join(sentiment_afinn) %>%
+  summarise(sentiment_score = mean(value)) 
+
+
+reddit_all <- left_join(reddit_all, sentiment_score, by = "title") %>%
+  mutate(sentiment_score = map(sentiment_score, ~ ifelse(is.na(.), 0, .)) %>% 
+  unlist()) #change NA values to 0
+```
