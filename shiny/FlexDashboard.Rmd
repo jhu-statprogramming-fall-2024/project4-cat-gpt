@@ -21,8 +21,8 @@ library(shiny)
 ```
 
 ```{r}
-reddit_all <- read.csv("../reddit_all.csv")
-school_info <- read.csv("../full_school_info_cleaned.csv")
+reddit_all <- read.csv("reddit_all.csv")
+school_info <- read.csv("full_school_info_cleaned.csv")
 ```
 
 # Instructions
@@ -377,7 +377,7 @@ renderLeaflet({
 
 ## Col1 { data-width=250}
 
-### **Choose Year and Month: **
+### **Choose Year and Month: ** 
 
 ```{r}
 selectInput(inputId = "selected_year", label = "Select Year:",
@@ -452,7 +452,13 @@ renderPlot({
         y = NULL,
         x = "Sentiment Score") +
       theme_minimal()+
-      xlim(-2, 2)
+      xlim(-2, 2)+
+      theme(axis.text.x = element_text(size=17), 
+            axis.text.y = element_text(size=17, color = "black"),
+            axis.title.x = element_text(size=19, face= "bold"), 
+            title = element_text(size=20, face= "bold"),
+            text = element_text(family = "serif"),
+            plot.title = element_text(hjust = 0.5))
   })
 ```
 
@@ -482,7 +488,13 @@ renderPlot({
           y = NULL,
           x = "Sentiment Score") +
         theme_minimal()+
-        xlim(-2, 2)
+        xlim(-2, 2)+
+        theme(axis.text.x = element_text(size=17), 
+            axis.text.y = element_text(size=17, color = "black"),
+            axis.title.x = element_text(size=19, face= "bold"), 
+            title = element_text(size=20, face= "bold"),
+            text = element_text(family = "serif"),
+            plot.title = element_text(hjust = 0.5))
     })
 ```
 
@@ -524,7 +536,9 @@ renderPlot({
         type = "n",
         pch = 19,  
         cex = 0.8,   
+        cex.main=2,
         col = "darkgrey",
+        cex.lab=1.3,
         xlab = "Date", 
         ylab = "Average Daily Sentiment Score",
         xlim = as.Date(c("2024-01-01", "2024-12-01")),
@@ -606,6 +620,8 @@ renderPlot({
         type = "n",
         pch = 19,  
         cex = 0.8,   
+        cex.main=2,
+        cex.lab=1.3,
         col = "darkgrey",
         xlab = "Date", 
         ylab = "Average Daily Sentiment Score",
