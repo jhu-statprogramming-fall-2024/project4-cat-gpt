@@ -1,0 +1,12 @@
+name: FlexDashboard
+title: FlexDashboard
+username: jiadili
+account: jiadili
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13573062
+bundleId: 9506145
+url: https://jiadili.shinyapps.io/FlexDashboard/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

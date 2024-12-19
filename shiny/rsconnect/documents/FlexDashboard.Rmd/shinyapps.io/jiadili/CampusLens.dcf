@@ -1,0 +1,12 @@
+name: CampusLens
+title: CampusLens
+username: jiadili
+account: jiadili
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13581710
+bundleId: 9506113
+url: https://jiadili.shinyapps.io/CampusLens/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
