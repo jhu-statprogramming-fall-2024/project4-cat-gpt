@@ -1,0 +1,390 @@
+---
+title: "sentiment_analysis in r"
+author: "Roujin An"
+date: "2024-12-20"
+output: html_document
+---
+
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(caTools)
+library(randomForest)
+
+# Step 1: Load the merged dataset
+merged_data <- read.csv("/Users/roujinan/Desktop/Data/merged_data.csv")
+
+# Step 2: Select Features and Target
+ml_data <- merged_data %>%
+  select(
+    average_sentiment,  # Target variable
+    Undergraduate.Tuition, Graduate.Tuition, Acceptance.Rate, SAT, ACT,
+    Avg..F, Avg..C, weather_rank_h_l,
+    crime_2018, crime_2019, crime_2020, crime_2021, crime_2022,
+    US_News_rank_2025, Change_in_rank
+  )
+
+# Remove rows with missing values
+ml_data <- na.omit(ml_data)
+
+# Step 3: Split the Dataset into Training and Testing Sets
+set.seed(123)  # For reproducibility
+split <- sample.split(ml_data$average_sentiment, SplitRatio = 0.8)
+train_data <- subset(ml_data, split == TRUE)
+test_data <- subset(ml_data, split == FALSE)
+
+# Step 4: Train a Random Forest Model
+rf_model <- randomForest(average_sentiment ~ ., data = train_data, importance = TRUE)
+
+# Print model summary
+print(rf_model)
+
+# Step 5: Predict on the Test Set
+predictions <- predict(rf_model, newdata = test_data)
+
+# Step 6: Evaluate the Model
+mse <- mean((test_data$average_sentiment - predictions)^2)  # Mean Squared Error
+r2 <- cor(test_data$average_sentiment, predictions)^2       # R² Score
+
+print(paste("Mean Squared Error:", mse))
+print(paste("R² Score:", r2))
+
+# Step 7: Analyze Feature Importance
+varImpPlot(rf_model)
+
+# Step 8: Save Predictions and the Model
+# Save predictions to a CSV
+write.csv(data.frame(actual = test_data$average_sentiment, predicted = predictions), 
+          "predictions.csv", row.names = FALSE)
+
+# Save the Random Forest model
+saveRDS(rf_model, "sentiment_rf_model.rds")
+print("Model and predictions saved.")
+```
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(caTools)
+library(randomForest)
+library(caret)
+
+# Step 1: Load the dataset
+merged_data <- read.csv("/Users/roujinan/Desktop/Data/merged_data.csv")
+
+# Step 2: Select features and target
+ml_data <- merged_data %>%
+  select(
+    average_sentiment,  # Target
+    Undergraduate.Tuition, Graduate.Tuition, Acceptance.Rate, SAT, ACT,
+    Avg..F, Avg..C, weather_rank_h_l,
+    crime_2018, crime_2020, crime_2021, crime_2022,
+    US_News_rank_2025, Change_in_rank
+  ) %>%
+  na.omit()
+
+# Step 3: Split the dataset
+set.seed(123)
+split <- sample.split(ml_data$average_sentiment, SplitRatio = 0.8)
+train_data <- subset(ml_data, split == TRUE)
+test_data <- subset(ml_data, split == FALSE)
+
+# Step 4: Hyperparameter Tuning with caret
+control <- trainControl(method = "cv", number = 5)  # 5-fold cross-validation
+tune_grid <- expand.grid(mtry = 2:6)  # Try different mtry values
+
+# Train the tuned Random Forest model
+set.seed(123)
+rf_tuned_model <- train(
+  average_sentiment ~ ., data = train_data,
+  method = "rf",
+  trControl = control,
+  tuneGrid = tune_grid,
+  ntree = 1000  # Increase number of trees
+)
+
+# Print the best model and its parameters
+print(rf_tuned_model)
+
+# Step 5: Predict on the test set
+predictions <- predict(rf_tuned_model, newdata = test_data)
+
+# Step 6: Evaluate the model
+mse <- mean((test_data$average_sentiment - predictions)^2)
+r2 <- cor(test_data$average_sentiment, predictions)^2
+
+print(paste("Tuned Mean Squared Error:", mse))
+print(paste("Tuned R² Score:", r2))
+
+# Step 7: Analyze Feature Importance
+varImpPlot(rf_tuned_model$finalModel)
+
+# Step 8: Save the tuned model and predictions
+write.csv(data.frame(actual = test_data$average_sentiment, predicted = predictions), 
+          "tuned_predictions.csv", row.names = FALSE)
+saveRDS(rf_tuned_model, "tuned_rf_model.rds")
+print("Tuned model and predictions saved.")
+```
+
+
+```{r}
+varImpPlot(rf_tuned_model$finalModel)
+predictions <- predict(rf_tuned_model, newdata = test_data)
+mse <- mean((test_data$average_sentiment - predictions)^2)
+r2 <- cor(test_data$average_sentiment, predictions)^2
+print(paste("Test Set MSE:", mse))
+print(paste("Test Set R²:", r2))
+```
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(caTools)
+library(xgboost)
+library(caret)
+
+# Step 1: Load the dataset
+merged_data <- read.csv("/Users/roujinan/Desktop/Data/merged_data.csv")
+
+# Step 2: Select features and target
+ml_data <- merged_data %>%
+  select(
+    average_sentiment,  # Target
+    Undergraduate.Tuition, Graduate.Tuition, Acceptance.Rate, SAT, ACT,
+    Avg..F, Avg..C, weather_rank_h_l,
+    crime_2018, crime_2020, crime_2021, crime_2022,
+    US_News_rank_2025, Change_in_rank
+  ) %>%
+  na.omit()
+
+# Step 3: Split the dataset
+set.seed(123)
+split <- sample.split(ml_data$average_sentiment, SplitRatio = 0.8)
+train_data <- subset(ml_data, split == TRUE)
+test_data <- subset(ml_data, split == FALSE)
+
+# Convert training and test sets to matrix format
+train_matrix <- as.matrix(train_data %>% select(-average_sentiment))
+train_labels <- train_data$average_sentiment
+test_matrix <- as.matrix(test_data %>% select(-average_sentiment))
+test_labels <- test_data$average_sentiment
+
+# Create DMatrix for XGBoost
+dtrain <- xgb.DMatrix(data = train_matrix, label = train_labels)
+dtest <- xgb.DMatrix(data = test_matrix, label = test_labels)
+
+# Step 4: Train the XGBoost Model with Hyperparameter Tuning
+set.seed(123)
+xgb_model <- xgboost(
+  data = dtrain,
+  max_depth = 5,          # Tree depth
+  eta = 0.1,              # Learning rate
+  nrounds = 500,          # Number of boosting iterations
+  subsample = 0.8,        # Randomly sample rows
+  colsample_bytree = 0.8, # Randomly sample features
+  objective = "reg:squarederror",  # Regression objective
+  eval_metric = "rmse"    # Metric to minimize
+)
+
+# Step 5: Predict on the test set
+predictions <- predict(xgb_model, dtest)
+
+# Step 6: Evaluate the model
+mse <- mean((test_labels - predictions)^2)
+r2 <- cor(test_labels, predictions)^2
+
+print(paste("XGBoost Mean Squared Error (MSE):", mse))
+print(paste("XGBoost R² Score:", r2))
+
+# Step 7: Analyze Feature Importance
+importance <- xgb.importance(model = xgb_model, feature_names = colnames(train_matrix))
+print(importance)
+
+# Plot Feature Importance
+library(ggplot2)
+xgb.plot.importance(importance)
+
+# Step 8: Save the XGBoost Model and Predictions
+write.csv(data.frame(actual = test_labels, predicted = predictions), 
+          "xgboost_predictions.csv", row.names = FALSE)
+saveRDS(xgb_model, "xgboost_model.rds")
+print("XGBoost model and predictions saved.")
+
+```
+
+```{r}
+# Load necessary libraries
+library(e1071)  # For SVM
+library(caret)  # For tuning and cross-validation
+
+# Step 1: Load and preprocess data
+ml_data <- read.csv("/Users/roujinan/Desktop/Data/merged_data.csv") %>%
+  select(
+    average_sentiment,  # Target
+    Undergraduate.Tuition, Graduate.Tuition, Acceptance.Rate, SAT, ACT,
+    Avg..F, Avg..C, weather_rank_h_l,
+    crime_2018, crime_2020, crime_2021, crime_2022,
+    US_News_rank_2025, Change_in_rank
+  ) %>%
+  na.omit()
+
+# Split the data
+set.seed(123)
+split_index <- createDataPartition(ml_data$average_sentiment, p = 0.8, list = FALSE)
+train_data <- ml_data[split_index, ]
+test_data <- ml_data[-split_index, ]
+
+# Scale features
+preproc <- preProcess(train_data, method = c("center", "scale"))
+train_data <- predict(preproc, train_data)
+test_data <- predict(preproc, test_data)
+
+# Step 2: Train and tune SVM
+set.seed(123)
+tune_grid <- expand.grid(
+  sigma = c(0.01, 0.1, 1),  # RBF kernel width
+  C = c(1, 10, 100)         # Regularization parameter
+)
+
+control <- trainControl(method = "cv", number = 5)  # 5-fold cross-validation
+
+svm_model <- train(
+  average_sentiment ~ ., data = train_data,
+  method = "svmRadial",
+  trControl = control,
+  tuneGrid = tune_grid
+)
+
+# Print best model
+print(svm_model)
+
+# Step 3: Predict and evaluate
+predictions <- predict(svm_model, test_data)
+
+mse <- mean((test_data$average_sentiment - predictions)^2)
+r2 <- cor(test_data$average_sentiment, predictions)^2
+
+print(paste("SVM Test MSE:", mse))
+print(paste("SVM Test R²:", r2))
+
+```
+
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(caTools)
+library(caret)
+
+# Load the dataset
+merged_data <- read.csv("/Users/roujinan/Desktop/Data/merged_data.csv")
+
+# Select features and target
+ml_data <- merged_data %>%
+  select(
+    average_sentiment,  # Target
+    Undergraduate.Tuition, Graduate.Tuition, Acceptance.Rate, SAT, ACT,
+    Avg..F, Avg..C, weather_rank_h_l,
+    crime_2018, crime_2020, crime_2021, crime_2022,
+    US_News_rank_2025, Change_in_rank
+  ) %>%
+  na.omit()
+
+# Split the dataset into training and testing sets
+set.seed(123)
+split <- sample.split(ml_data$average_sentiment, SplitRatio = 0.8)
+train_data <- subset(ml_data, split == TRUE)
+test_data <- subset(ml_data, split == FALSE)
+
+train_labels <- train_data$average_sentiment
+test_labels <- test_data$average_sentiment
+
+# Install and load necessary libraries
+if (!require("rpart")) install.packages("rpart")
+if (!require("rpart.plot")) install.packages("rpart.plot")
+library(rpart)
+library(rpart.plot)
+
+# Train Decision Tree Model
+tree_model <- rpart(
+  average_sentiment ~ ., 
+  data = train_data, 
+  method = "anova"
+)
+
+# Visualize the Decision Tree
+rpart.plot(tree_model, main = "Decision Tree")
+
+# Predict on the test set
+tree_predictions <- predict(tree_model, newdata = test_data)
+
+# Evaluate the model
+tree_mse <- mean((test_labels - tree_predictions)^2)
+tree_r2 <- cor(test_labels, tree_predictions)^2
+
+print(paste("Decision Tree Mean Squared Error (MSE):", tree_mse))
+print(paste("Decision Tree R² Score:", tree_r2))
+```
+```{r}
+# Train Linear Regression Model
+lm_model <- lm(
+  average_sentiment ~ ., 
+  data = train_data
+)
+
+# Summary of the model
+summary(lm_model)
+
+# Predict on the test set
+lm_predictions <- predict(lm_model, newdata = test_data)
+
+# Evaluate the model
+lm_mse <- mean((test_labels - lm_predictions)^2)
+lm_r2 <- cor(test_labels, lm_predictions)^2
+
+print(paste("Linear Regression Mean Squared Error (MSE):", lm_mse))
+print(paste("Linear Regression R² Score:", lm_r2))
+```
+
+```{r}
+# Install and load necessary libraries
+if (!require("caret")) install.packages("caret")
+library(caret)
+
+# Preprocess data (normalize features)
+preprocess <- preProcess(train_data %>% select(-average_sentiment), method = c("center", "scale"))
+train_scaled <- predict(preprocess, train_data %>% select(-average_sentiment))
+test_scaled <- predict(preprocess, test_data %>% select(-average_sentiment))
+
+# Train k-NN Model with Cross-Validation
+set.seed(123)
+knn_model <- train(
+  x = train_scaled, 
+  y = train_labels, 
+  method = "knn",
+  tuneGrid = data.frame(k = 1:10), # Try k = 1 to 10
+  trControl = trainControl(method = "cv", number = 5) # 5-fold cross-validation
+)
+
+# Best k value
+print(paste("Best k:", knn_model$bestTune$k))
+
+# Predict on the test set
+knn_predictions <- predict(knn_model, newdata = test_scaled)
+
+# Evaluate the model
+knn_mse <- mean((test_labels - knn_predictions)^2)
+knn_r2 <- cor(test_labels, knn_predictions)^2
+
+print(paste("k-NN Mean Squared Error (MSE):", knn_mse))
+print(paste("k-NN R² Score:", knn_r2))
+```
+```{r}
+print("Model Performance Summary:")
+print(paste("Decision Tree MSE:", tree_mse, "R²:", tree_r2))
+print(paste("Linear Regression MSE:", lm_mse, "R²:", lm_r2))
+print(paste("k-NN MSE:", knn_mse, "R²:", knn_r2))
+```
+
+

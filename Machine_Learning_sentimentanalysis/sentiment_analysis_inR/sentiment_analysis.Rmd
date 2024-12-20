@@ -1,0 +1,214 @@
+---
+title: "sentiment_analysis"
+author: "Roujin An"
+date: "2024-12-03"
+output: html_document
+---
+
+
+
+```{r}
+library(dplyr)
+folder_path <- '/Users/roujinan/Desktop/Data/university_posts_copy'
+# Get the list of all CSV files in the folder
+file_list <- list.files(path = folder_path, pattern = "*.csv", full.names = TRUE)
+# Combine all files into a single data frame with a new column for file names
+all_data <- file_list %>%
+  lapply(function(file) {
+    df <- read.csv(file)
+    df$file_name <- sub('\\.csv$','',basename(file))  # Add file name column
+    return(df)
+  }) %>%
+  bind_rows()
+# Check the combined data
+head(all_data)
+```
+### Data processing
+
+```{r}
+# Combine 'title' and 'selftext' into a single text column
+all_data <- all_data %>%
+  mutate(text = paste(title, selftext, sep = " "))
+```
+
+### Using Syuzhet
+
+```{r}
+library(syuzhet)
+
+# Perform sentiment analysis using Syuzhet
+all_data$syuzhet_sentiment <- get_sentiment(as.character(all_data$text), method = "bing")
+
+# Categorize sentiment into labels
+all_data <- all_data %>%
+  mutate(syuzhet_label = case_when(
+    syuzhet_sentiment > 0 ~ "positive",
+    syuzhet_sentiment < 0 ~ "negative",
+    TRUE ~ "neutral"
+  ))
+
+# Check the results
+head(all_data)
+```
+```{r}
+library(tidytext)
+
+# Tokenize the text and calculate sentiment
+tidy_sentiment <- all_data %>%
+  unnest_tokens(word, text) %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(file_name, sentiment, name = "word_count")
+
+# Summarize sentiment by file
+tidy_sentiment_summary <- tidy_sentiment %>%
+  group_by(file_name, sentiment) %>%
+  summarize(total_words = sum(word_count), .groups = "drop")
+
+# Check sentiment summary
+print(tidy_sentiment_summary)
+```
+```{r}
+# Example: Group sentiment by file and calculate average scores
+sentiment_summary <- all_data %>%
+  group_by(file_name, syuzhet_label) %>%
+  summarize(average_sentiment = mean(syuzhet_sentiment), .groups = "drop")
+
+# Check summary
+print(sentiment_summary)
+```
+
+```{r}
+# Save the detailed sentiment data
+write.csv(all_data, "combined_sentiment_results.csv", row.names = FALSE)
+
+# Save summarized sentiment data
+write.csv(sentiment_summary, "sentiment_summary.csv", row.names = FALSE)
+
+print("Sentiment analysis results saved!")
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(sentiment_summary, aes(x = reorder(file_name, average_sentiment), y = average_sentiment, fill = syuzhet_label)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Average Sentiment by File (Ascending)", x = "File Name", y = "Average Sentiment") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+library(ggplot2)
+
+# Filter the data for positive sentiment
+positive_sentiment_summary <- sentiment_summary %>%
+  filter(syuzhet_label == "positive") %>%
+  arrange(average_sentiment)
+
+# Plot the data in ascending order of positive sentiment
+ggplot(positive_sentiment_summary, aes(x = reorder(file_name, average_sentiment), y = average_sentiment, fill = syuzhet_label)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Average Positive Sentiment by File (Ascending)", x = "File Name", y = "Average Positive Sentiment Score") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+```{r}
+# Compute sentiment statistics
+sentiment_report <- all_data %>%
+  group_by(syuzhet_label) %>%
+  summarize(
+    avg_sentiment = mean(syuzhet_sentiment, na.rm = TRUE),
+    min_sentiment = min(syuzhet_sentiment, na.rm = TRUE),
+    max_sentiment = max(syuzhet_sentiment, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Calculate overall average sentiment
+overall_avg_sentiment <- mean(all_data$syuzhet_sentiment, na.rm = TRUE)
+
+# Print the sentiment report
+print("Sentiment Range and Averages by Label:")
+print(sentiment_report)
+
+print(paste("Overall Average Sentiment:", round(overall_avg_sentiment, 2)))
+```
+
+
+
+### compare with rankings
+```{r}
+# Load ranking data
+ranking_data <- read.csv('/Users/roujinan/Desktop/Data/top50_college_copy.csv')
+
+# Match sentiment data with ranking data
+merged_data <- all_data %>%
+  mutate(Reddit_subdirectory = sub("\\.csv$", "", file_name)) %>%
+  inner_join(ranking_data, by = c("Reddit_subdirectory" = "Reddit_subdirectory"))
+
+# Check the merged data
+head(merged_data)
+```
+## data from the recent 3 months 
+## plot accending / desending 
+## affin arf
+
+
+```{r}
+library(dplyr)
+
+# Calculate average sentiment score for each school
+school_sentiment_summary <- all_data %>%
+  group_by(file_name) %>%
+  summarize(
+    average_sentiment = mean(syuzhet_sentiment, na.rm = TRUE),
+    positive_count = sum(syuzhet_label == "positive"),
+    neutral_count = sum(syuzhet_label == "neutral"),
+    negative_count = sum(syuzhet_label == "negative")
+  )
+
+# Check the results
+print(school_sentiment_summary)
+```
+
+```{r}
+library(ggplot2)
+
+# Bar plot for average sentiment by school
+ggplot(school_sentiment_summary, aes(x = reorder(file_name, average_sentiment), y = average_sentiment)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Average Sentiment by School", x = "School", y = "Average Sentiment Score") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+# Save the school sentiment summary to a specific location
+write.csv(school_sentiment_summary, "/Users/roujinan/Desktop/Data/school_sentiment_summary.csv", row.names = FALSE)
+
+# Confirmation message
+print("School sentiment summary saved to '/Users/roujinan/Desktop/Data/school_sentiment_summary.csv'")
+```
+
+```{r}
+# Load the school info dataset
+school_info <- read.csv("/Users/roujinan/Desktop/Data/full_school_info_cleaned.csv")
+
+# Merge the sentiment summary with the school info dataset
+merged_data <- school_info %>%
+  left_join(school_sentiment_summary, by = c("Reddit_subdirectory" = "file_name"))
+
+# Check the merged dataset
+head(merged_data)
+```
+```{r}
+# Check unique values in both datasets
+print(unique(school_info$Reddit_subdirectory))  # From the school info dataset
+print(unique(school_sentiment_summary$file_name))  # From the sentiment summary
+```
+```{r}
+# Save the school sentiment summary to a specific location
+write.csv(merged_data, "/Users/roujinan/Desktop/Data/merged_data.csv", row.names = FALSE)
+
+```
+
